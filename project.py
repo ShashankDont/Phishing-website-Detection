@@ -1,8 +1,10 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, f1_score, classification_report
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 # 1. Load and Encode
 df = pd.read_csv('PhishingData.csv')
@@ -13,9 +15,9 @@ X = df.select_dtypes(include=['number']).drop('Label', axis=1)
 y = df['Label']
 
 # 3. Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-# 4. FIX: Scale the data (This solves the ConvergenceWarning)
+# 4. FIX: Scale the data
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
@@ -31,24 +33,12 @@ print(f"Accuracy:  {accuracy_score(y_test, predictions):.4f}")
 print(f"Precision: {precision_score(y_test, predictions):.4f}")
 print(f"F1 Score:  {f1_score(y_test, predictions):.4f}")
 
-# This gives you a nice summary of everything at once
-print("\nFull Classification Report:")
-print(classification_report(y_test, predictions))
+# Generate the matrix
+cm = confusion_matrix(y_test, predictions)
 
-import numpy as np
+# Plot the matrix
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Legitimate', 'Phishing'])
+disp.plot(cmap=plt.cm.Blues)
 
-# Get the coefficients (weights) assigned to each feature
-coefficients = model.coef_[0]
-feature_names = X.columns
-
-# Create a dataframe to view them easily
-importance_df = pd.DataFrame({
-    'Feature': feature_names,
-    'Weight': coefficients
-}).sort_values(by='Weight', ascending=False)
-
-print("\nTop 10 Features Predictors for Phishing:")
-print(importance_df.head(10))
-
-print("\nTop 10 Features Predictors for Legitimate:")
-print(importance_df.tail(10))
+plt.title('Confusion Matrix: Phishing Detection')
+plt.show()
