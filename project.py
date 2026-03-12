@@ -1,42 +1,51 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, f1_score, classification_report
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from data import get_prepared_data
+from logistic_model import run_logistic
+from random_forest_model import run_random_forest
+from knn_model import run_knn
 
-# 1. Load the data
-df = pd.read_csv('PhishingData.csv')
+def main():
+    # Get the data
+    X_train, X_test, y_train, y_test = get_prepared_data()
+    
+    # Run Logistic Regression
+    log_preds = run_logistic(X_train, X_test, y_train, y_test)
+    
+    # Run Random Forest
+    rf_preds = run_random_forest(X_train, X_test, y_train, y_test)
+    
+    knn_preds = run_knn(X_train, X_test, y_train, y_test)
+    
+    # Plot the confustion matrices of all models
+    print("\nGenerating Confusion Matrices...")
+    plot_all_confusion_matrices(y_test, log_preds, rf_preds, knn_preds)
 
-# 2. Clean the data
-df['Label'] = df['Label'].map({'Phishing': 1, 'Legitimate': 0})
-X = df.select_dtypes(include=['number']).drop('Label', axis=1)
-y = df['Label']
 
-# 3. Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Plot the confusion matrix for all models
+def plot_all_confusion_matrices(y_test, log_preds, rf_preds, knn_preds):
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(14, 6))
 
-# 4. Scale the data
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+    # Plot Logistic Regression
+    cm_log = confusion_matrix(y_test, log_preds)
+    disp_log = ConfusionMatrixDisplay(confusion_matrix=cm_log, display_labels=['Legitimate', 'Phishing'])
+    disp_log.plot(ax=ax1, cmap=plt.cm.Blues)
+    ax1.set_title('Logistic Regression')
 
-# 5. Train the model
-model = LogisticRegression()
-model.fit(X_train_scaled, y_train)
+    # Plot Random Forest
+    cm_rf = confusion_matrix(y_test, rf_preds)
+    disp_rf = ConfusionMatrixDisplay(confusion_matrix=cm_rf, display_labels=['Legitimate', 'Phishing'])
+    disp_rf.plot(ax=ax2, cmap=plt.cm.Greens)
+    ax2.set_title('Random Forest')
+    
+    # Plot KNN
+    cm_knn = confusion_matrix(y_test, knn_preds)
+    ConfusionMatrixDisplay(cm_knn, display_labels=['Legit', 'Phish']).plot(ax=ax3, cmap='Purples')
+    ax3.set_title('K-Nearest Neighbors')
 
-# 6. Test and Evaluate the model
-predictions = model.predict(X_test_scaled)
+    plt.tight_layout()
+    plt.show()    
+    
 
-print(f"Accuracy:  {accuracy_score(y_test, predictions):.4f}")
-print(f"Precision: {precision_score(y_test, predictions):.4f}")
-print(f"F1 Score:  {f1_score(y_test, predictions):.4f}")
-
-# Generate the matrix
-cm = confusion_matrix(y_test, predictions)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Legitimate', 'Phishing'])
-disp.plot(cmap=plt.cm.Blues)
-plt.title('Confusion Matrix: Phishing Detection')
-plt.show()
-
+if __name__ == "__main__":
+    main()
