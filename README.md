@@ -6,7 +6,7 @@ This study focuses on finding a model that is accurate while also being quick in
 
 ## Models Implemented
 
-| Model | Description | Primary Strength |
+| Model | Description |
 | :--- | :--- | :--- |
 | **Logistic Regression** | Baseline |
 | **K-Nearest Neighbors** | Distance-based classification |
